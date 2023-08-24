@@ -11,12 +11,14 @@ struct ContentView: View {
     @ObservedObject var viewModel = QuizViewModel()
 
     var body: some View {
-        VStack {
-            Text("Categories")
-                .font(.largeTitle)
+        NavigationView {
             List(viewModel.quizCategories, id: \.self) { category in
                 Text(category)
             }
+            .refreshable {
+                viewModel.fetchQuizCategories()
+            }
+            .navigationTitle("Categories")
         }
         .onAppear {
             viewModel.fetchQuizCategories()
