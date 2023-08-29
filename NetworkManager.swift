@@ -57,6 +57,50 @@ class NetworkManager: NSObject, URLSessionDelegate {
         
         task.resume()
     }
+    
+    // Add a new function in NetworkManager to fetch quiz details for the selected category
+    func fetchQuizDetails(forCategory category: String, completion: @escaping (Result<[String], Error>) -> Void) {
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("{F025A57B-C02F-4959-9B3D-2D72F579656A}", forHTTPHeaderField: "sc_apikey")
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body: [String: Any] = [
+            "query": """
+                query {
+                  item(path: "/sitecore/content/HeadlessApp/Content/Quizzes/\(category)", language: "en") {
+                    id
+                    children {
+                       results {
+                           id,
+                           name
+                       }
+                    }
+                  }
+                }
+                """
+        ]
+        
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body, options: [])
+        
+        let task = session.dataTask(with: request) { (data, response, error) in
+            guard let data = data, error == nil else {
+                completion(.failure(error!))
+                return
+            }
+
+            do {
+                let result = try JSONDecoder().decode(QueryResult.self, from: data)
+                let details = result.data.item.children.results.map { $0.name }
+                completion(.success(details))
+            } catch {
+                completion(.failure(error))
+            }
+        }
+        
+        task.resume()
+    }
+
 
     func urlSession(_ session: URLSession,
                     didReceive challenge: URLAuthenticationChallenge,

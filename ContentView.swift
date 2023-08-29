@@ -13,7 +13,9 @@ struct ContentView: View {
     var body: some View {
         NavigationView {
             List(viewModel.quizCategories, id: \.self) { category in
-                Text(category)
+                NavigationLink(destination: CategoryDetailView(viewModel: viewModel, category: category)) { // Directly passing the String here
+                    Text(category)
+                }
             }
             .refreshable {
                 viewModel.fetchQuizCategories()
@@ -25,6 +27,7 @@ struct ContentView: View {
         }
     }
 }
+
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
