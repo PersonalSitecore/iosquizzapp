@@ -101,6 +101,53 @@ class NetworkManager: NSObject, URLSessionDelegate {
         task.resume()
     }
 
+    
+    func fetchQuestionDetail(forPath path: String, completion: @escaping (Result<(String, [String]), Error>) -> Void) {
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("{F025A57B-C02F-4959-9B3D-2D72F579656A}", forHTTPHeaderField: "sc_apikey")
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body: [String: Any] = [
+            "query": """
+                query {
+                    item(path: "\(path)", language: "en") {
+                        id,
+                        field(name: "Question Text") {
+                            value
+                        },
+                        children {
+                            results {
+                                id,
+                                name
+                            }
+                        }
+                    }
+                }
+            """
+        ]
+
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body, options: [])
+
+        let task = session.dataTask(with: request) { (data, response, error) in
+            guard let data = data, error == nil else {
+                completion(.failure(error!))
+                return
+            }
+
+            do {
+                let result = try JSONDecoder().decode(QueryResult.self, from: data)
+                let question = result.data.item.field?.value ?? ""
+                let options = result.data.item.children.results.map { $0.name }
+                completion(.success((question, options)))
+            } catch {
+                completion(.failure(error))
+            }
+        }
+
+        task.resume()
+    }
+
 
     func urlSession(_ session: URLSession,
                     didReceive challenge: URLAuthenticationChallenge,
@@ -118,8 +165,15 @@ struct DataClass: Codable {
 }
 
 struct Item: Codable {
+    let id: String
+    let field: Field?
     let children: Children
 }
+
+struct Field: Codable {
+    let value: String
+}
+
 
 struct Children: Codable {
     let results: [ResultElement]

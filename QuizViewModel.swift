@@ -12,6 +12,10 @@ import SwiftUI
 class QuizViewModel: ObservableObject {
     @Published var quizCategories = [String]()
        @Published var quizDetails = [String]()
+    
+    @Published var questionText = ""
+    @Published var questionOptions = [String]()
+    
     private var networkManager = NetworkManager()
     
     func fetchQuizCategories() {
@@ -39,4 +43,20 @@ class QuizViewModel: ObservableObject {
                 }
             }
         }
+
+
+    func fetchQuestionDetail(forPath path: String) {
+        networkManager.fetchQuestionDetail(forPath: path) { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let detail):
+                    self?.questionText = detail.0
+                    self?.questionOptions = detail.1
+                case .failure(let error):
+                    print("Failed to fetch question details: \(error)")
+                }
+            }
+        }
+    }
+
 }

@@ -13,7 +13,9 @@ struct CategoryDetailView: View {
     
     var body: some View {
         List(viewModel.quizDetails, id: \.self) { detail in
-            Text(detail)
+            NavigationLink(destination: QuestionDetailView(viewModel: viewModel, questionPath: "/sitecore/content/HeadlessApp/Content/Quizzes/\(category)/\(detail)/Question 1")) {
+                Text(detail)
+            }
         }
         .navigationTitle("\(category) Details")
         .onAppear {
